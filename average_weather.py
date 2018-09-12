@@ -21,9 +21,9 @@ except Exception as e:
 try:
     tracker.get_pflux()
     print('\nProton Flux')
-    print('  >10 MeV:  {:.2f}'.format(tracker.pflux_stats['>10 MeV']))
-    print('  >50 MeV:  {:.2f}'.format(tracker.pflux_stats['>50 MeV']))
-    print('  >100 MeV: {:.2f}'.format(tracker.pflux_stats['>100 MeV']))
+    print('  >10 MeV:  {:.3f}'.format(tracker.pflux_stats['>10 MeV']))
+    print('  >50 MeV:  {:.3f}'.format(tracker.pflux_stats['>50 MeV']))
+    print('  >100 MeV: {:.3f}'.format(tracker.pflux_stats['>100 MeV']))
 except Exception as e:
     print("Error: Could not get proton flux.")
     print("  " + str(e))
@@ -34,4 +34,11 @@ try:
     print('  1.0-8.0 A: {:.2}'.format(tracker.xray_stats['1.0-8.0 A']))
 except Exception as e:
     print("Error: Could not get X-ray flux.")
+    print("  " + str(e))
+try:
+    tracker.get_neutrons()
+    print('\nNeutron Counts')
+    print('  Average: {:.2e}'.format(tracker.neutron_stats['mean']))
+except Exception as e:
+    print("Error: Could not get neutron counts.")
     print("  " + str(e))

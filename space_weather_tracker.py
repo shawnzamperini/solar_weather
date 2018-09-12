@@ -21,6 +21,7 @@ class SpaceWeatherTracker:
         self.kp_stats    = {}
         self.pflux_stats = {}
         self.xray_stats  = {}
+        self.neutron_stats = {}
 
     def get_Kp(self):
         # Load the webpage with the last 30 days of Kp data into a Dataframe.
@@ -62,7 +63,7 @@ class SpaceWeatherTracker:
         self.pflux_stats['>50 MeV']  = pflux_df['>50 MeV'].mean()
         self.pflux_stats['>100 MeV'] = pflux_df['>100 MeV'].mean()
 
-    def get_xray(self):
+    def get_xray(self, print_url=False):
 
         # Load the xray url with the correct numbers for the date put in.
         # To do: Make if statement for months that aren't 1-30 days.
@@ -71,19 +72,30 @@ class SpaceWeatherTracker:
                     self.date.strftime('%Y') + '/' + self.date.strftime('%m') \
                     + '/goes15/csv/g15_xrs_1m_2018' + self.date.strftime('%m') \
                     + '01_2018' + self.date.strftime('%m') + '30.csv'
-        xray_df = pd.read_csv(xray_url, skiprows=143, sep=',',
-                              usecols=[0,3,6],
-                              names=['t', '0.5-4.0 A', '1.0-8.0 A'],
-                              parse_dates={'Time':[0]})
-        xray_df.set_index('Time', inplace=True)
+        if print_url:
+            print("X-ray URL: " + xray_url)
+        self.xray_df = pd.read_csv(xray_url,
+                                   skiprows=136 + int(datetime.datetime.now().day),
+                                   sep=',',
+                                   usecols=[0,3,6],
+                                   names=['t', '0.5-4.0 A', '1.0-8.0 A'],
+                                   parse_dates={'Time':[0]})
+        self.xray_df.set_index('Time', inplace=True)
 
         # Replace nagatives with np.nan (bad data).
-        xray_df[xray_df[['0.5-4.0 A', '1.0-8.0 A']] < 0] = np.nan
+        self.xray_df[self.xray_df[['0.5-4.0 A', '1.0-8.0 A']] < 0] = np.nan
 
         # Get the statistics of the desired data.
         desired_date = self.date.strftime('%Y-%m-%d')
-        self.xray_stats['0.5-4.0 A'] = xray_df[desired_date]['0.5-4.0 A'].mean()
-        self.xray_stats['1.0-8.0 A'] = xray_df[desired_date]['1.0-8.0 A'].mean()
+        self.xray_stats['0.5-4.0 A'] = self.xray_df[desired_date]['0.5-4.0 A'].mean()
+        self.xray_stats['1.0-8.0 A'] = self.xray_df[desired_date]['1.0-8.0 A'].mean()
 
     def get_neutrons(self):
-        pass
+        # Files are in format sopo_YYMMDD_neutrons.txt.
+        date_fmt = self.date.strftime('%y%m%d')
+        neutron_file = '/mnt/c/Users/Shawn/Google Drive/School/Tennessee/' + \
+                       'Fall 2018/NE 512/neutron_ascii_files/sopo_' + \
+                       date_fmt +'_neutrons.txt'
+        self.neutron_df = pd.read_csv(neutron_file, skiprows=25, sep=';',
+                                      names=['Date', 'Data'])
+        self.neutron_stats['mean'] = self.neutron_df['Data'].mean()
