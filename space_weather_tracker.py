@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import urllib.request
 import datetime
+import calendar
 
 class SpaceWeatherTracker:
     """
@@ -68,14 +69,24 @@ class SpaceWeatherTracker:
         # Load the xray url with the correct numbers for the date put in.
         # To do: Make if statement for months that aren't 1-30 days.
         #xray_url = 'https://satdat.ngdc.noaa.gov/sem/goes/data/avg/2018/09/goes15/csv/g15_xrs_1m_20180901_20180930.csv'
+        days_in_month = str(calendar.monthrange(self.year, self.month)[1])
         xray_url = 'https://satdat.ngdc.noaa.gov/sem/goes/data/avg/' + \
                     self.date.strftime('%Y') + '/' + self.date.strftime('%m') \
                     + '/goes15/csv/g15_xrs_1m_2018' + self.date.strftime('%m') \
-                    + '01_2018' + self.date.strftime('%m') + '30.csv'
+                    + '01_2018' + self.date.strftime('%m') + days_in_month + '.csv'
         if print_url:
             print("X-ray URL: " + xray_url)
+
+        # Only skip the rows the increase by one each day if you're getting data
+        # in that same month. Otherwise, for past months, skip the amount of rows
+        # of how many days were in that month.
+        if self.date.month == datetime.datetime.now().month:
+            skiprows = 136 + int(datetime.datetime.now().day)
+        else:
+            skiprows = 136 + calendar.monthrange(self.year, self.month)[1] + 1
+
         self.xray_df = pd.read_csv(xray_url,
-                                   skiprows=136 + int(datetime.datetime.now().day),
+                                   skiprows=skiprows,
                                    sep=',',
                                    usecols=[0,3,6],
                                    names=['t', '0.5-4.0 A', '1.0-8.0 A'],
